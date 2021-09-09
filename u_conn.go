@@ -15,7 +15,12 @@ import (
 	"net"
 	"strconv"
 	"sync/atomic"
+	"time"
 )
+
+type Delays struct {
+	AfterClientHello int
+}
 
 type UConn struct {
 	*Conn
@@ -25,6 +30,8 @@ type UConn struct {
 
 	ClientHelloBuilt bool
 	HandshakeState   ClientHandshakeState
+
+	Delays Delays
 
 	// sessionID may or may not depend on ticket; nil => random
 	GetSessionID func(ticket []byte) [32]byte
@@ -44,6 +51,7 @@ func UClient(conn net.Conn, config *Config, clientHelloID ClientHelloID) *UConn 
 	handshakeState := ClientHandshakeState{C: &tlsConn, Hello: &ClientHelloMsg{}}
 	uconn := UConn{Conn: &tlsConn, ClientHelloID: clientHelloID, HandshakeState: handshakeState}
 	uconn.HandshakeState.uconn = &uconn
+	uconn.Delays = Delays{}
 	return &uconn
 }
 
@@ -358,6 +366,10 @@ func (c *UConn) clientHandshake() (err error) {
 
 	if _, err := c.writeRecord(recordTypeHandshake, hello.marshal()); err != nil {
 		return err
+	}
+
+	if c.Delays.AfterClientHello != 0 {
+		time.Sleep(time.Duration(c.Delays.AfterClientHello) * time.Second)
 	}
 
 	msg, err := c.readHandshake()
