@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/refraction-networking/utls"
+	tls "github.com/jfreeland/utls"
 	"golang.org/x/net/http2"
 )
 
@@ -21,8 +21,10 @@ Ticket could be of any length, but for camouflage purposes it's better to use un
 and common length. See https://tlsfingerprint.io/session-tickets`)
 )
 
-var requestHostname = "facebook.com" // speaks http2 and TLS 1.3
-var requestAddr = "31.13.72.36:443"
+var (
+	requestHostname = "facebook.com" // speaks http2 and TLS 1.3
+	requestAddr     = "31.13.72.36:443"
+)
 
 func HttpGetDefault(hostname string, addr string) (*http.Response, error) {
 	config := tls.Config{ServerName: hostname}
@@ -98,10 +100,12 @@ func HttpGetExplicitRandom(hostname string, addr string) (*http.Response, error)
 		return nil, fmt.Errorf("uTlsConn.BuildHandshakeState() error: %+v", err)
 	}
 
-	cRandom := []byte{100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
+	cRandom := []byte{
+		100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
 		110, 111, 112, 113, 114, 115, 116, 117, 118, 119,
 		120, 121, 122, 123, 124, 125, 126, 127, 128, 129,
-		130, 131}
+		130, 131,
+	}
 	uTlsConn.SetClientRandom(cRandom)
 	err = uTlsConn.Handshake()
 	if err != nil {
@@ -228,7 +232,8 @@ func HttpGetCustom(hostname string, addr string) (*http.Response, error) {
 				tls.PKCS1WithSHA384,
 				tls.PKCS1WithSHA512,
 				tls.ECDSAWithSHA1,
-				tls.PKCS1WithSHA1}},
+				tls.PKCS1WithSHA1,
+			}},
 			&tls.KeyShareExtension{[]tls.KeyShare{
 				{Group: tls.CurveID(tls.GREASE_PLACEHOLDER), Data: []byte{0}},
 				{Group: tls.X25519},
@@ -238,7 +243,8 @@ func HttpGetCustom(hostname string, addr string) (*http.Response, error) {
 				tls.VersionTLS13,
 				tls.VersionTLS12,
 				tls.VersionTLS11,
-				tls.VersionTLS10}},
+				tls.VersionTLS10,
+			}},
 		},
 		GetSessionID: nil,
 	}
@@ -334,7 +340,6 @@ func forgeConn() {
 	// because net Pipes are weird
 	serverTls.Read(buf)
 	fmt.Println("Server closed")
-
 }
 
 func main() {

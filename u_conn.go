@@ -368,9 +368,12 @@ func (c *UConn) clientHandshake() (err error) {
 		return err
 	}
 
+	fmt.Printf("checking delays")
 	if c.Delays.AfterClientHello != 0 {
+		fmt.Printf("AfterClientHello delay: %v\n", c.Delays.AfterClientHello)
 		time.Sleep(time.Duration(c.Delays.AfterClientHello) * time.Second)
 	}
+	fmt.Printf("done checking delays")
 
 	msg, err := c.readHandshake()
 	if err != nil {
